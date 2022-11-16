@@ -11,13 +11,12 @@
     packages."${system}" = {
       default = self.packages."${system}"."${name}";
       "${name}" =
-        with import nixpkgs { inherit system; };
+        let pkgs = import nixpkgs { inherit system; }; in
         # gcc8Stdenv.mkDerivation {
-        stdenv.mkDerivation {
+        pkgs.stdenv.mkDerivation {
           inherit name;
-          inherit vulkan-validation-layers;
           src = self;
-          buildInputs = [
+          buildInputs = with pkgs; [
             glfw3
             glm
             glslang
@@ -32,8 +31,10 @@
             xorg.libXrandr
             xorg.libXxf86vm
           ];
-          buildPhase = "make helloTriangleNDebug";
-          installPhase = "mkdir -p $out; install -t $out helloTriangle";
+          shellHook = ''
+            export PS1="\n(hello) \033[1;32m[\w]\$\033[0m "
+            export VK_LAYER_PATH="${pkgs.vulkan-validation-layers}/share/vulkan/explicit_layer.d";
+          '';
         };
     };
   };
